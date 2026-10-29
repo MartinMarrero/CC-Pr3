@@ -23,18 +23,22 @@ Natural PrimitiveRecursion::Compute(const Arguments& args,
                                     CallCounter& counter) const {
   Arguments fixed_arguments(args.begin(), args.end() - 1);
   const Natural recursion_argument = args.back();
+  Natural result = base_->Evaluate(fixed_arguments, counter);
   if (recursion_argument == 0) {
-    return base_->Evaluate(fixed_arguments, counter);
+    return result;
   }
 
-  Arguments previous_arguments = fixed_arguments;
-  previous_arguments.push_back(recursion_argument - 1);
-  const Natural previous = Evaluate(previous_arguments, counter);
-
-  Arguments step_arguments = fixed_arguments;
-  step_arguments.push_back(recursion_argument - 1);
-  step_arguments.push_back(previous);
-  return step_->Evaluate(step_arguments, counter);
+  for (Natural current = 1;; ++current) {
+    counter.Increment();
+    Arguments step_arguments = fixed_arguments;
+    step_arguments.push_back(current - 1);
+    step_arguments.push_back(result);
+    result = step_->Evaluate(step_arguments, counter);
+    if (current == recursion_argument) {
+      break;
+    }
+  }
+  return result;
 }
 
 }  // namespace prf
